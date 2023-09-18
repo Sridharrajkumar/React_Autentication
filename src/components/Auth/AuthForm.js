@@ -1,39 +1,95 @@
-import { useState } from 'react';
+import { useState,useRef } from 'react';
 
 import classes from './AuthForm.module.css';
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isloading, setloading] = useState(false);
+  const [error, seterror] = useState();
+  const emailRef = useRef();
+  const passRef = useRef();
+  
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
     
   };
 
-  const LoginHandler = () => {
-    setloading((prevState) => !prevState);
+  const submitHandler = async(event) => {
+    event.preventDefault();
+    const email = emailRef.current.value;
+    const pass = passRef.current.value;
+    seterror('');
+
+    if (isLogin)
+    {
+      const api = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDhWSFFHCybRyL4cgPavj7q4BlAKgAACZM',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: email,
+            password: pass,
+            returnSecureToken:true
+          }),
+          headers:{'Content-Type':'application/json'},
+        }
+      )
+      if (api.ok)
+      {
+        console.log('loggedin')
+        console.log(await api.json());
+      }
+      else
+      {
+        const err = await api.json();
+        seterror(err.error.message);
+        
+      }
+    }
+    else
+    {
+        const api = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDhWSFFHCybRyL4cgPavj7q4BlAKgAACZM',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: email,
+            password: pass,
+            returnSecureToken:true
+          }),
+          headers: {
+            'Content-Type':"application/json",
+          }
+        }
+      );
+      if (!api.ok)
+      {
+        const err = await api.json();
+        seterror(err.error.message);
+      }
+      
+    }
+    
+    emailRef.current.value = null;
+    passRef.current.value = null;
+    
+     
   }
 
   return (
     <section className={classes.auth}>
       <h1>{isLogin ? 'Login' : 'Sign Up'}</h1>
-      <form >
+      <form onSubmit={submitHandler}>
         <div className={classes.control}>
           <label htmlFor='email'>Your Email</label>
-          <input type='email' id='email' required />
+          <input type='email' id='email' required ref={emailRef}/>
         </div>
         <div className={classes.control}>
-          <label htmlFor='password'>Your Password</label>
-          <input
-            type='password'
-            id='password'
-            required
-          />
+          <label htmlFor='password' ref={passRef}>Your Password</label>
+          <input type='password' id='password' required ref={passRef}/>
         </div>
+        <h6 style={{color:'white'}}>{error}</h6>
         
         <div className={classes.actions}>
-        {!isLogin ? <button>SignUp</button> : (!isloading ?<button onClick={LoginHandler}>LogIn</button>: <h7 style={{color:'red'}}>sending Request...</h7>)}
+          <button >{isLogin ? 'Login':'Create Account'}</button>
           <button
             type='button'
             className={classes.toggle}
