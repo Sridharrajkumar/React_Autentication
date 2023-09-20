@@ -37,7 +37,7 @@ export const AuthContextProvider = (props) => {
 
         if (logtime && storedToken)
         {
-            const expiretime =  Number(logtime) + 1 * 60 * 1000;
+            const expiretime =  Number(logtime) + 5 * 60 * 1000;
             console.log('expiretime:', expiretime);
             console.log('Date.now():', Date.now());
             if (Date.now() >= expiretime)
